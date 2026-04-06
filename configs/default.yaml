@@ -1,0 +1,13 @@
+model:
+  model_id: "deepseek-ai/DeepSeek-OCR-2"
+  torch_dtype: "float16"
+  base_size: 1024
+  image_size: 768
+  crop_mode: true
+
+pdf:
+  dpi: 300
+
+paths:
+  data_dir: "data"
+  output_dir: "output"
