@@ -35,11 +35,13 @@ class DeepSeekOCREngine:
 
         dtype = getattr(torch, self.config.torch_dtype)
         logger.info("Loading model from %s (dtype=%s)", self.config.model_id, dtype)
+        # Force all weights onto a single GPU to avoid cross-device tensor errors.
+        # DeepSeek-OCR-2's infer() code doesn't handle multi-GPU placement correctly.
         self.model = AutoModel.from_pretrained(
             self.config.model_id,
             trust_remote_code=True,
             torch_dtype=dtype,
-            device_map="auto",
+            device_map={"": 0},
         ).eval()
         logger.info("Model loaded successfully")
 
