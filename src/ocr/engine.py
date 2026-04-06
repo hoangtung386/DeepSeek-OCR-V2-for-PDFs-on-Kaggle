@@ -1,6 +1,9 @@
 """DeepSeek OCR V2 model loading and inference."""
 
+import contextlib
+import io
 import logging
+import os
 import tempfile
 
 import torch
@@ -75,7 +78,10 @@ class DeepSeekOCREngine:
         """
         prompt = PROMPTS.get(task_type, PROMPTS["markdown"])
 
-        with torch.no_grad():
+        # Suppress stdout/stderr from model.infer() which prints OCR results
+        # and debug info (BASE/PATCHES sizes) directly, bloating notebook output.
+        with torch.no_grad(), contextlib.redirect_stdout(io.StringIO()), \
+                contextlib.redirect_stderr(io.StringIO()):
             result = self.model.infer(
                 self.tokenizer,
                 prompt=prompt,
