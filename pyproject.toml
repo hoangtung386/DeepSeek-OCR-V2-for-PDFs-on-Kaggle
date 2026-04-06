@@ -1,0 +1,36 @@
+[project]
+name = "deepseek-ocr-pipeline"
+version = "0.1.0"
+description = "Extract text from PDFs using DeepSeek OCR V2 on Kaggle GPU"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+dependencies = [
+    "torch>=2.1.0",
+    "transformers>=4.40.0",
+    "Pillow>=10.0.0",
+    "pdf2image>=1.16.0",
+    "accelerate>=0.27.0",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-mock>=3.12",
+    "ruff>=0.4.0",
+]
+
+[project.scripts]
+ocr-pipeline = "src.cli:main"
+
+[tool.ruff]
+target-version = "py310"
+line-length = 99
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "SIM"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
