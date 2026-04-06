@@ -1,6 +1,7 @@
 """DeepSeek OCR V2 model loading and inference."""
 
 import logging
+import tempfile
 
 import torch
 from transformers import AutoModel, AutoTokenizer
@@ -59,6 +60,7 @@ class DeepSeekOCREngine:
                 self.tokenizer,
                 prompt=prompt,
                 image_file=image_path,
+                output_path=tempfile.mkdtemp(),
                 base_size=self.config.base_size,
                 image_size=self.config.image_size,
                 crop_mode=self.config.crop_mode,
