@@ -6,7 +6,6 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
 dependencies = [
-    "torch==2.10.0",
     "transformers==4.45.2",
     "Pillow==11.3.0",
     "pdf2image==1.17.0",
