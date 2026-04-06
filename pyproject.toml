@@ -7,7 +7,7 @@ requires-python = ">=3.10"
 license = {text = "MIT"}
 dependencies = [
     "torch>=2.1.0",
-    "transformers>=4.40.0,<4.52.0",
+    "transformers>=4.40.0",
     "Pillow>=10.0.0",
     "pdf2image>=1.16.0",
     "accelerate>=0.27.0",
