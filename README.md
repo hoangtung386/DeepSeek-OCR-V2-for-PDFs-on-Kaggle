@@ -40,7 +40,6 @@ PDF files ─> pdf2image (page splitting) ─> DeepSeek-OCR-2 (per-page inferenc
 │   └── test_pipeline.py
 ├── notebooks/
 │   └── kaggle_example.ipynb        # Ready-to-run Kaggle notebook (auto-downloads data)
-├── output/                         # Generated Markdown files appear here
 ├── pyproject.toml                  # Project metadata + pinned dependencies
 ├── Makefile                        # Shortcut commands
 └── README.md

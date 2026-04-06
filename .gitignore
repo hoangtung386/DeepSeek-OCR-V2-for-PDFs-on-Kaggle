@@ -30,8 +30,7 @@ Thumbs.db
 
 # Project specific
 data/
-output/*.md
-output/*.txt
+output/
 
 # Environment
 .env
