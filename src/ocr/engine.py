@@ -78,17 +78,30 @@ class DeepSeekOCREngine:
         """
         prompt = PROMPTS.get(task_type, PROMPTS["markdown"])
 
-        # Suppress stdout/stderr from model.infer() which prints OCR results
-        # and debug info (BASE/PATCHES sizes) directly, bloating notebook output.
-        with torch.no_grad(), contextlib.redirect_stdout(io.StringIO()), \
-                contextlib.redirect_stderr(io.StringIO()):
-            result = self.model.infer(
-                self.tokenizer,
-                prompt=prompt,
-                image_file=image_path,
-                output_path=tempfile.mkdtemp(),
-                base_size=self.config.base_size,
-                image_size=self.config.image_size,
-                crop_mode=self.config.crop_mode,
-            )
+        # Suppress stdout/stderr from model.infer() which prints OCR results,
+        # debug info (BASE/PATCHES sizes), and C-level warnings (cuDNN/cuBLAS).
+        # Python-level redirect doesn't catch C-level output, so redirect the
+        # actual OS file descriptors.
+        with torch.no_grad():
+            devnull = os.open(os.devnull, os.O_WRONLY)
+            old_stdout = os.dup(1)
+            old_stderr = os.dup(2)
+            try:
+                os.dup2(devnull, 1)
+                os.dup2(devnull, 2)
+                result = self.model.infer(
+                    self.tokenizer,
+                    prompt=prompt,
+                    image_file=image_path,
+                    output_path=tempfile.mkdtemp(),
+                    base_size=self.config.base_size,
+                    image_size=self.config.image_size,
+                    crop_mode=self.config.crop_mode,
+                )
+            finally:
+                os.dup2(old_stdout, 1)
+                os.dup2(old_stderr, 2)
+                os.close(devnull)
+                os.close(old_stdout)
+                os.close(old_stderr)
         return result
