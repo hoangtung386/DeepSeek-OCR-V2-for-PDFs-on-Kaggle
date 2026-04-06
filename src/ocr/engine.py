@@ -78,17 +78,24 @@ class DeepSeekOCREngine:
         """
         prompt = PROMPTS.get(task_type, PROMPTS["markdown"])
 
-        # Suppress stdout/stderr from model.infer() which prints OCR results,
-        # debug info (BASE/PATCHES sizes), and C-level warnings (cuDNN/cuBLAS).
-        # Python-level redirect doesn't catch C-level output, so redirect the
-        # actual OS file descriptors.
+        # Suppress ALL output from model.infer() — it prints OCR results,
+        # debug info (BASE/PATCHES sizes), and C-level warnings directly.
+        # Jupyter uses ZMQ-backed sys.stdout (not fd 1), so we must redirect
+        # both the Python-level streams AND OS-level file descriptors.
+        import sys
+
         with torch.no_grad():
-            devnull = os.open(os.devnull, os.O_WRONLY)
-            old_stdout = os.dup(1)
-            old_stderr = os.dup(2)
+            # Save Python-level streams (Jupyter ZMQ streams)
+            py_stdout, py_stderr = sys.stdout, sys.stderr
+            # Save OS-level file descriptors (C-level output)
+            devnull_fd = os.open(os.devnull, os.O_WRONLY)
+            old_fd1 = os.dup(1)
+            old_fd2 = os.dup(2)
             try:
-                os.dup2(devnull, 1)
-                os.dup2(devnull, 2)
+                sys.stdout = io.StringIO()
+                sys.stderr = io.StringIO()
+                os.dup2(devnull_fd, 1)
+                os.dup2(devnull_fd, 2)
                 result = self.model.infer(
                     self.tokenizer,
                     prompt=prompt,
@@ -99,9 +106,11 @@ class DeepSeekOCREngine:
                     crop_mode=self.config.crop_mode,
                 )
             finally:
-                os.dup2(old_stdout, 1)
-                os.dup2(old_stderr, 2)
-                os.close(devnull)
-                os.close(old_stdout)
-                os.close(old_stderr)
+                os.dup2(old_fd1, 1)
+                os.dup2(old_fd2, 2)
+                os.close(devnull_fd)
+                os.close(old_fd1)
+                os.close(old_fd2)
+                sys.stdout = py_stdout
+                sys.stderr = py_stderr
         return result
