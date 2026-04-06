@@ -16,6 +16,23 @@ PROMPTS = {
 }
 
 
+def _patch_masked_scatter():
+    """Patch masked_scatter_ to auto-cast source dtype to match target.
+
+    DeepSeek-OCR-2's infer() hardcodes autocast to bfloat16, which T4 GPUs
+    don't support. This causes the vision encoder to output float32 while
+    text embeddings stay float16, crashing at masked_scatter_.
+    """
+    _orig = torch.Tensor.masked_scatter_
+
+    def _safe_masked_scatter_(self, mask, source):
+        if source.dtype != self.dtype:
+            source = source.to(self.dtype)
+        return _orig(self, mask, source)
+
+    torch.Tensor.masked_scatter_ = _safe_masked_scatter_
+
+
 class DeepSeekOCREngine:
     """Wrapper around DeepSeek-OCR-2 for document text extraction."""
 
@@ -43,6 +60,7 @@ class DeepSeekOCREngine:
             torch_dtype=dtype,
             device_map={"": 0},
         ).eval()
+        _patch_masked_scatter()
         logger.info("Model loaded successfully")
 
     def run_ocr(self, image_path: str, task_type: str = "markdown") -> str:
