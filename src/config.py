@@ -11,7 +11,7 @@ class ModelConfig:
     """Configuration for the DeepSeek OCR model."""
 
     model_id: str = "deepseek-ai/DeepSeek-OCR-2"
-    torch_dtype: str = "float16"
+    torch_dtype: str = "float32"
     base_size: int = 1024
     image_size: int = 768
     crop_mode: bool = True
