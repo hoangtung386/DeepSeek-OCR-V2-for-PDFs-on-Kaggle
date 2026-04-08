@@ -5,6 +5,7 @@ import io
 import logging
 import os
 import tempfile
+from pathlib import Path
 
 import torch
 from transformers import AutoModel, AutoTokenizer
@@ -96,15 +97,22 @@ class DeepSeekOCREngine:
                 sys.stderr = io.StringIO()
                 os.dup2(devnull_fd, 1)
                 os.dup2(devnull_fd, 2)
-                result = self.model.infer(
+                output_dir = tempfile.mkdtemp()
+                self.model.infer(
                     self.tokenizer,
                     prompt=prompt,
                     image_file=image_path,
-                    output_path=tempfile.mkdtemp(),
+                    output_path=output_dir,
                     base_size=self.config.base_size,
                     image_size=self.config.image_size,
                     crop_mode=self.config.crop_mode,
+                    save_results=True,
                 )
+                result_files = list(Path(output_dir).glob("*.txt"))
+                if result_files:
+                    result = result_files[0].read_text(encoding="utf-8")
+                else:
+                    result = ""
             finally:
                 os.dup2(old_fd1, 1)
                 os.dup2(old_fd2, 2)
